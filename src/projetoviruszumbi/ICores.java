@@ -8,13 +8,13 @@ package projetoviruszumbi;
 public interface ICores {
 
     /**
-     * Cor da borda
-     */
-    public static final String BORDA = "\u001B[46m";
-    /**
      * Cor dos espaços vazios
      */
     public static final String VAZIO = "\u001B[40m";
+    /**
+     * Cor da borda
+     */
+    public static final String BORDA = "\u001B[46m";
     /**
      * Cor da pessoa saudável
      */

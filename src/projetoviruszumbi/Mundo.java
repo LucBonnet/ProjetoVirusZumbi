@@ -1,5 +1,6 @@
 package projetoviruszumbi;
 
+import java.awt.color.ICC_ColorSpace;
 import java.util.ArrayList;
 
 /**
@@ -9,43 +10,62 @@ import java.util.ArrayList;
  */
 public class Mundo {
 
-    /**
-     * Mapa do mundo
-     */
+    // Mapa do mundo
     public int[][] mapa;
+    // Pessoas saudáveis
     private ArrayList<PessoaSaudavel> pessoasSaudaveis = new ArrayList<>();
+    // Pessoas doentes
     private ArrayList<PessoaDoente> pessoasDoentes = new ArrayList<>();
+    // zumbis
     private ArrayList<Zumbi> zumbis = new ArrayList<>();
+    // hospitais
     private ArrayList<Hospital> hospitais = new ArrayList<>();
+    // virus
     private Virus virus = new Virus("Vírus zumbi");
+
+    private String cores[] = {ICores.VAZIO, ICores.BORDA, ICores.PESSOA_SAUDAVEL, ICores.PESSOA_DOENTE, ICores.ZUMBI, ICores.HOSPITAL_PAREDES, ICores.HOSPITAL_CRUZ, ICores.RESET};
 
     /**
      * Método construtor da classe Mundo
      */
     public Mundo() {
-        // Cria o mapa com 15 linhas e 45 colunas
-        // TODO mudar tamanho do mapa
-        this.mapa = new int[5][10];
+        // Cria o mapa com 30 linhas e 90 colunas
+        this.mapa = new int[30][90];
         reiniciaMapa();
 
-        // TODO mudar valores iniciais
         // Cria as pessoas saudáveis iniciais
-        int numInicialPS = 2;
+        int numInicialPS = 100;
         for (int i = 0; i < numInicialPS; i++) {
             int x = (int) (Math.random() * mapa.length);
             int y = (int) (Math.random() * mapa[0].length);
-            int cor = Integer.parseInt(ICores.PESSOA_SAUDAVEL.replace("\u001B[", "").replace("m", ""));
+            int cor = 0;
+            try {
+                cor = indexCor(cores, ICores.PESSOA_SAUDAVEL);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
             pessoasSaudaveis.add(new PessoaSaudavel(x, y, cor));
         }
 
-        // TODO mudar valores iniciais
         // Cria as pessoas doentes iniciais
-        int numInicialPD = 1;
+        int numInicialPD = 2;
         for (int i = 0; i < numInicialPD; i++) {
             int x = (int) (Math.random() * mapa.length);
             int y = (int) (Math.random() * mapa[0].length);
-            int cor = Integer.parseInt(ICores.PESSOA_SAUDAVEL.replace("\u001B[", "").replace("m", ""));
+            int cor = 0;
+            try {
+                cor = indexCor(cores, ICores.PESSOA_DOENTE);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
             pessoasDoentes.add(new PessoaDoente(x, y, cor, virus));
+        }
+        
+        // Cria os hospitais
+        int numHospitais = 3;
+        int posicoes[][] = {{5, 10}, {mapa.length - 10, 10}, {mapa.length / 2 - 2, mapa[0].length - 15}};
+        for (int i = 0; i < numHospitais; i++) {
+            hospitais.add(new Hospital(posicoes[i][0], posicoes[i][1], 5, 5, 5, 6));
         }
     }
 
@@ -73,11 +93,32 @@ public class Mundo {
     public void atualizaMundo() {
         reiniciaMapa();
 
+        // Adiciona os hospitais
+        for (Hospital h : hospitais) {
+            int x = h.getX();
+            int y = h.getY();
+            int l = h.getLargura();
+            int a = h.getAltura();
+            
+            for(int i = 0; i < l; i++) {
+                for(int j = 0; j < a; j++) {
+                    if((i == (int)(l/2) || i == (int)(l/2) - 1 || i == (int)(l/2) + 1) && j == (int)(a/2)) {
+                        mapa[x+i][y+j] = h.getCorCruz();
+                    }else if ((j == (int)(a/2) || j == (int)(a/2) - 1 || j == (int)(a/2) + 1) && i == (int)(l/2)) {
+                        mapa[x+i][y+j] = h.getCorCruz();
+                    } else {
+                        mapa[x+i][y+j] = h.getCorParede();
+                    }
+                    
+                }
+            }
+        }
+        
         // Move todas as pessoas saudáveis
         for (PessoaSaudavel p : pessoasSaudaveis) {
             int x = p.getX();
             int y = p.getY();
-            this.mapa[x][y] = 2;
+            this.mapa[x][y] = p.getCor();
 
             p.mover();
             if (p.getX() > mapa.length - 1) {
@@ -97,7 +138,7 @@ public class Mundo {
         for (PessoaDoente p : pessoasDoentes) {
             int x = p.getX();
             int y = p.getY();
-            this.mapa[x][y] = 3;
+            this.mapa[x][y] = p.getCor();
 
             p.mover();
             if (p.getX() > mapa.length - 1) {
@@ -111,6 +152,76 @@ public class Mundo {
             } else if (p.getY() < 0) {
                 p.setY(mapa[0].length - 1);
             }
+        }
+        
+        ArrayList<PessoaSaudavel> contaminados = new ArrayList<>();
+        
+        // Verifica se ocorreu um contaminação
+        for(PessoaSaudavel ps : pessoasSaudaveis) {
+            int x = ps.getX();
+            int y = ps.getY();
+            
+            Boolean contaminado = false;
+            for(PessoaDoente pd : pessoasDoentes) {
+                int xpd = pd.getX();
+                int ypd = pd.getY();
+                
+                if(x == xpd && y == ypd) {
+                    // mesma posição
+                    contaminado = true; 
+                    break;
+                } else if (x == xpd && y == ypd + 1) {
+                    contaminado = true;
+                    break;
+                } else if (x == xpd && y == ypd - 1) {
+                    contaminado = true;
+                    break;
+                } else if (x == xpd + 1 && y == ypd) {
+                    contaminado = true;
+                    break;
+                } else if (x == xpd - 1 && y == ypd) {
+                    contaminado = true;
+                    break;
+                }
+            }
+            
+            for(Zumbi z : zumbis) {
+                int xz = z.getX();
+                int yz = z.getY();
+                
+                if(x == xz && y == yz) {
+                    // mesma posição
+                    contaminado = true; 
+                    break;
+                } else if (x == xz && y == yz + 1) {
+                    contaminado = true;
+                    break;
+                } else if (x == xz && y == yz - 1) {
+                    contaminado = true;
+                    break;
+                } else if (x == xz + 1 && y == yz) {
+                    contaminado = true;
+                    break;
+                } else if (x == xz - 1 && y == yz) {
+                    contaminado = true;
+                    break;
+                }
+            }
+            
+            if (contaminado) {
+                int corPessoaDoente = 0;
+                try{
+                    corPessoaDoente = indexCor(cores, ICores.PESSOA_DOENTE);
+                } catch(Exception e) {
+                    System.err.println(e.getMessage());
+                }
+                pessoasDoentes.add(new PessoaDoente(x, y, corPessoaDoente, this.virus));
+                contaminados.add(ps);
+            }
+        }
+        
+        for (PessoaSaudavel c : contaminados) {
+            pessoasSaudaveis.remove(c);
         }
     }
 
@@ -131,33 +242,30 @@ public class Mundo {
 
         for (int i = 0; i < this.mapa.length; i++) {
             for (int j = 0; j < this.mapa[0].length; j++) {
-                switch (mapa[i][j]) {
-                    case 0:
-                        System.out.print(ICores.VAZIO + " " + ICores.RESET);
-                        break;
-                    case 1:
-                        System.out.print(ICores.BORDA + " " + ICores.RESET);
-                        break;
-                    case 2:
-                        System.out.print(ICores.PESSOA_SAUDAVEL + " " + ICores.RESET);
-                        break;
-                    case 3:
-                        System.out.print(ICores.PESSOA_DOENTE + " " + ICores.RESET);
-                        break;
-                    case 4:
-                        System.out.print(ICores.ZUMBI + " " + ICores.RESET);
-                        break;
-                    case 5:
-                        System.out.print(ICores.HOSPITAL_PAREDES + " " + ICores.RESET);
-                        break;
-                    case 6:
-                        System.out.print(ICores.HOSPITAL_CRUZ + " " + ICores.RESET);
-                        break;
-                }
+                System.out.print(cores[mapa[i][j]] + " " + cores[7]);
             }
             System.out.print("\n");
         }
         System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("");
+    }
+    
+    public void desenhaMundoII() {
+        for (int i = 0; i < this.mapa.length; i++) {
+            for (int j = 0; j < this.mapa[0].length; j++) {
+                System.out.print(mapa[i][j] + " ");
+            }
+            System.out.print("\n");
+        }
     }
 
     private void reiniciaMapa() {
@@ -165,15 +273,27 @@ public class Mundo {
         for (int i = 0; i < this.mapa.length; i++) {
             for (int j = 0; j < this.mapa[0].length; j++) {
                 if (i == 0 || i == this.mapa.length - 1) {
+                    // borda
                     mapa[i][j] = 1;
                 } else {
                     if (j == 0 || j == this.mapa[0].length - 1) {
+                        // borda
                         mapa[i][j] = 1;
                     } else {
+                        // meio
                         mapa[i][j] = 0;
                     }
                 }
             }
         }
+    }
+
+    private int indexCor(String vetor[], String cor) throws Exception {
+        for (int i = 0; i < vetor.length; i++) {
+            if (vetor[i].equals(cor)) {
+                return i;
+            }
+        }
+        throw new Exception("Cor não encontrada");
     }
 }
