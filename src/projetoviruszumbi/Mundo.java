@@ -136,6 +136,7 @@ public class Mundo {
             }
         }
 
+        ArrayList<PessoaDoente> curados = new ArrayList<>();
         // Move todas as pessoas doentes
         for (PessoaDoente p : pessoasDoentes) {
             int x = p.getX();
@@ -154,8 +155,30 @@ public class Mundo {
             } else if (p.getY() < 0) {
                 p.setY(mapa[0].length - 1);
             }
+
+            for (Hospital h : hospitais) {
+                int xh = h.getX();
+                int yh = h.getY();
+                int lh = h.getLargura();
+                int ah = h.getAltura();
+
+                if (x >= xh && x <= lh + xh && y >= yh && y <= ah + yh) {
+                    curados.add(p);
+                    int corPessoaSaudavel = 0;
+                    try {
+                        corPessoaSaudavel = indexCor(cores, ICores.PESSOA_SAUDAVEL);
+                    } catch (Exception e) {
+                        System.err.println(e.getMessage());
+                    }
+                    pessoasSaudaveis.add(new PessoaSaudavel(x, y, corPessoaSaudavel));
+                }
+            }
         }
         
+        for(PessoaDoente c : curados) {
+            pessoasDoentes.remove(c);
+        }
+
         // Move todos os zumbis
         for (Zumbi z : zumbis) {
             int x = z.getX();
