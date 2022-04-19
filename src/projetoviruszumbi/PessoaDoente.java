@@ -1,5 +1,8 @@
 package projetoviruszumbi;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Classe PessoaDoente. Fornece métodos e atributos para o registro de uma
  * pessoa doente
@@ -9,6 +12,7 @@ package projetoviruszumbi;
 public class PessoaDoente extends Pessoa implements IMovable {
 
     private Virus virus;
+    private long dataDeContagio;
 
     /**
      * Métoo construtor da classe Pessoa
@@ -20,6 +24,9 @@ public class PessoaDoente extends Pessoa implements IMovable {
     public PessoaDoente(int x, int y, int cor, Virus virus) {
         super(x, y, cor);
         this.virus = virus;
+        Calendar calendar = Calendar.getInstance();
+        Date data = calendar.getTime();
+        this.dataDeContagio = data.getTime();
     }
 
     /**
@@ -44,5 +51,9 @@ public class PessoaDoente extends Pessoa implements IMovable {
                 setX(getX() + 1);
                 break;
         }
+    }
+    
+    public long getDataDeContagio() {
+        return this.dataDeContagio;
     }
 }

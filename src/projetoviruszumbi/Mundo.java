@@ -2,6 +2,8 @@ package projetoviruszumbi;
 
 import java.awt.color.ICC_ColorSpace;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Classe Mundo. Fornece métodos e atributos para o registro do mundo
@@ -60,7 +62,7 @@ public class Mundo {
             }
             pessoasDoentes.add(new PessoaDoente(x, y, cor, virus));
         }
-        
+
         // Cria os hospitais
         int numHospitais = 3;
         int posicoes[][] = {{5, 10}, {mapa.length - 10, 10}, {mapa.length / 2 - 2, mapa[0].length - 15}};
@@ -99,21 +101,21 @@ public class Mundo {
             int y = h.getY();
             int l = h.getLargura();
             int a = h.getAltura();
-            
-            for(int i = 0; i < l; i++) {
-                for(int j = 0; j < a; j++) {
-                    if((i == (int)(l/2) || i == (int)(l/2) - 1 || i == (int)(l/2) + 1) && j == (int)(a/2)) {
-                        mapa[x+i][y+j] = h.getCorCruz();
-                    }else if ((j == (int)(a/2) || j == (int)(a/2) - 1 || j == (int)(a/2) + 1) && i == (int)(l/2)) {
-                        mapa[x+i][y+j] = h.getCorCruz();
+
+            for (int i = 0; i < l; i++) {
+                for (int j = 0; j < a; j++) {
+                    if ((i == (int) (l / 2) || i == (int) (l / 2) - 1 || i == (int) (l / 2) + 1) && j == (int) (a / 2)) {
+                        mapa[x + i][y + j] = h.getCorCruz();
+                    } else if ((j == (int) (a / 2) || j == (int) (a / 2) - 1 || j == (int) (a / 2) + 1) && i == (int) (l / 2)) {
+                        mapa[x + i][y + j] = h.getCorCruz();
                     } else {
-                        mapa[x+i][y+j] = h.getCorParede();
+                        mapa[x + i][y + j] = h.getCorParede();
                     }
-                    
+
                 }
             }
         }
-        
+
         // Move todas as pessoas saudáveis
         for (PessoaSaudavel p : pessoasSaudaveis) {
             int x = p.getX();
@@ -154,21 +156,40 @@ public class Mundo {
             }
         }
         
+        // Move todos os zumbis
+        for (Zumbi z : zumbis) {
+            int x = z.getX();
+            int y = z.getY();
+            this.mapa[x][y] = z.getCor();
+
+            z.mover();
+            if (z.getX() > mapa.length - 1) {
+                z.setX(0);
+            } else if (z.getX() < 0) {
+                z.setX(mapa.length - 1);
+            }
+
+            if (z.getY() > mapa[0].length - 1) {
+                z.setY(0);
+            } else if (z.getY() < 0) {
+                z.setY(mapa[0].length - 1);
+            }
+        }
+
         ArrayList<PessoaSaudavel> contaminados = new ArrayList<>();
-        
         // Verifica se ocorreu um contaminação
-        for(PessoaSaudavel ps : pessoasSaudaveis) {
+        for (PessoaSaudavel ps : pessoasSaudaveis) {
             int x = ps.getX();
             int y = ps.getY();
-            
+
             Boolean contaminado = false;
-            for(PessoaDoente pd : pessoasDoentes) {
+            for (PessoaDoente pd : pessoasDoentes) {
                 int xpd = pd.getX();
                 int ypd = pd.getY();
-                
-                if(x == xpd && y == ypd) {
+
+                if (x == xpd && y == ypd) {
                     // mesma posição
-                    contaminado = true; 
+                    contaminado = true;
                     break;
                 } else if (x == xpd && y == ypd + 1) {
                     contaminado = true;
@@ -184,14 +205,14 @@ public class Mundo {
                     break;
                 }
             }
-            
-            for(Zumbi z : zumbis) {
+
+            for (Zumbi z : zumbis) {
                 int xz = z.getX();
                 int yz = z.getY();
-                
-                if(x == xz && y == yz) {
+
+                if (x == xz && y == yz) {
                     // mesma posição
-                    contaminado = true; 
+                    contaminado = true;
                     break;
                 } else if (x == xz && y == yz + 1) {
                     contaminado = true;
@@ -207,21 +228,44 @@ public class Mundo {
                     break;
                 }
             }
-            
+
             if (contaminado) {
                 int corPessoaDoente = 0;
-                try{
+                try {
                     corPessoaDoente = indexCor(cores, ICores.PESSOA_DOENTE);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     System.err.println(e.getMessage());
                 }
                 pessoasDoentes.add(new PessoaDoente(x, y, corPessoaDoente, this.virus));
                 contaminados.add(ps);
             }
         }
-        
+
         for (PessoaSaudavel c : contaminados) {
             pessoasSaudaveis.remove(c);
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        Date data = calendar.getTime();
+        long dataAtual = data.getTime();
+
+        ArrayList<PessoaDoente> novosZumbis = new ArrayList<>();
+        for (PessoaDoente pd : pessoasDoentes) {
+            long tempo = dataAtual - pd.getDataDeContagio();
+            int corZumbi = 0;
+            try {
+                corZumbi = indexCor(cores, ICores.ZUMBI);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+            if (tempo >= 15000) {
+                zumbis.add(new Zumbi(pd.getX(), pd.getY(), corZumbi, virus));
+                novosZumbis.add(pd);
+            }
+        }
+
+        for (PessoaDoente nz : novosZumbis) {
+            pessoasDoentes.remove(nz);
         }
     }
 
@@ -258,7 +302,7 @@ public class Mundo {
         System.out.println("");
         System.out.println("");
     }
-    
+
     public void desenhaMundoII() {
         for (int i = 0; i < this.mapa.length; i++) {
             for (int j = 0; j < this.mapa[0].length; j++) {
