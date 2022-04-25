@@ -65,7 +65,7 @@ public class Mundo {
 
         // Cria os hospitais
         int numHospitais = 3;
-        int posicoes[][] = {{5, 10}, {mapa.length - 10, 10}, {mapa.length / 2 - 2, mapa[0].length - 15}};
+        int posicoes[][] = {{10, 5}, {10, mapa.length - 10}, {mapa[0].length - 15, mapa.length / 2 - 2}};
         for (int i = 0; i < numHospitais; i++) {
             hospitais.add(new Hospital(posicoes[i][0], posicoes[i][1], 5, 5, 5, 6));
         }
@@ -105,11 +105,11 @@ public class Mundo {
             for (int i = 0; i < l; i++) {
                 for (int j = 0; j < a; j++) {
                     if ((i == (int) (l / 2) || i == (int) (l / 2) - 1 || i == (int) (l / 2) + 1) && j == (int) (a / 2)) {
-                        mapa[x + i][y + j] = h.getCorCruz();
+                        mapa[y + i][x + j] = h.getCorCruz();
                     } else if ((j == (int) (a / 2) || j == (int) (a / 2) - 1 || j == (int) (a / 2) + 1) && i == (int) (l / 2)) {
-                        mapa[x + i][y + j] = h.getCorCruz();
+                        mapa[y + i][x + j] = h.getCorCruz();
                     } else {
-                        mapa[x + i][y + j] = h.getCorParede();
+                        mapa[y + i][x + j] = h.getCorParede();
                     }
 
                 }
