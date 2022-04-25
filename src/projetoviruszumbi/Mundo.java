@@ -36,10 +36,10 @@ public class Mundo {
         reiniciaMapa();
 
         // Cria as pessoas saudáveis iniciais
-        int numInicialPS = 100;
+        int numInicialPS = 1;
         for (int i = 0; i < numInicialPS; i++) {
-            int x = (int) (Math.random() * mapa.length);
-            int y = (int) (Math.random() * mapa[0].length);
+            int x = (int) (Math.random() * mapa[0].length);
+            int y = (int) (Math.random() * mapa.length);
             int cor = 0;
             try {
                 cor = indexCor(cores, ICores.PESSOA_SAUDAVEL);
@@ -50,10 +50,10 @@ public class Mundo {
         }
 
         // Cria as pessoas doentes iniciais
-        int numInicialPD = 2;
+        int numInicialPD = 10;
         for (int i = 0; i < numInicialPD; i++) {
-            int x = (int) (Math.random() * mapa.length);
-            int y = (int) (Math.random() * mapa[0].length);
+            int x = (int) (Math.random() * mapa[0].length);
+            int y = (int) (Math.random() * mapa.length);
             int cor = 0;
             try {
                 cor = indexCor(cores, ICores.PESSOA_DOENTE);
@@ -120,20 +120,10 @@ public class Mundo {
         for (PessoaSaudavel p : pessoasSaudaveis) {
             int x = p.getX();
             int y = p.getY();
-            this.mapa[x][y] = p.getCor();
+            this.mapa[y][x] = p.getCor();
 
-            p.mover();
-            if (p.getX() > mapa.length - 1) {
-                p.setX(0);
-            } else if (p.getX() < 0) {
-                p.setX(mapa.length - 1);
-            }
-
-            if (p.getY() > mapa[0].length - 1) {
-                p.setY(0);
-            } else if (p.getY() < 0) {
-                p.setY(mapa[0].length - 1);
-            }
+            p.mover(mapa[0].length, mapa.length);
+            
         }
 
         ArrayList<PessoaDoente> curados = new ArrayList<>();
@@ -141,20 +131,9 @@ public class Mundo {
         for (PessoaDoente p : pessoasDoentes) {
             int x = p.getX();
             int y = p.getY();
-            this.mapa[x][y] = p.getCor();
+            this.mapa[y][x] = p.getCor();
 
-            p.mover();
-            if (p.getX() > mapa.length - 1) {
-                p.setX(0);
-            } else if (p.getX() < 0) {
-                p.setX(mapa.length - 1);
-            }
-
-            if (p.getY() > mapa[0].length - 1) {
-                p.setY(0);
-            } else if (p.getY() < 0) {
-                p.setY(mapa[0].length - 1);
-            }
+            p.mover(mapa.length, mapa[0].length);
 
             for (Hospital h : hospitais) {
                 int xh = h.getX();
@@ -183,20 +162,9 @@ public class Mundo {
         for (Zumbi z : zumbis) {
             int x = z.getX();
             int y = z.getY();
-            this.mapa[x][y] = z.getCor();
+            this.mapa[y][x] = z.getCor();
 
-            z.mover();
-            if (z.getX() > mapa.length - 1) {
-                z.setX(0);
-            } else if (z.getX() < 0) {
-                z.setX(mapa.length - 1);
-            }
-
-            if (z.getY() > mapa[0].length - 1) {
-                z.setY(0);
-            } else if (z.getY() < 0) {
-                z.setY(mapa[0].length - 1);
-            }
+            z.mover(mapa.length, mapa[0].length);
         }
 
         ArrayList<PessoaSaudavel> contaminados = new ArrayList<>();
@@ -313,16 +281,6 @@ public class Mundo {
             }
             System.out.print("\n");
         }
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
         System.out.println("");
     }
 

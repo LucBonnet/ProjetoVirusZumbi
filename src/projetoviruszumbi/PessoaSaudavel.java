@@ -12,7 +12,7 @@ public class PessoaSaudavel extends Pessoa implements IMovable {
      * Método mover. Move a pessoa para uma posição aleatória
      */
     @Override
-    public void mover() {
+    public void mover(int larguraMapa, int alturaMapa) {
         // Define uma direção
         int direcao = (int) (Math.random() * 4);
 
@@ -29,6 +29,18 @@ public class PessoaSaudavel extends Pessoa implements IMovable {
             case 3:
                 setX(getX() + 1);
                 break;
+        }
+        
+        if (super.getX() > larguraMapa - 1) {
+            super.setX(0);
+        } else if (super.getX() < 0) {
+            super.setX(larguraMapa - 1);
+        }
+
+        if (super.getY() > alturaMapa - 1) {
+            super.setY(0);
+        } else if (super.getY() < 0) {
+            super.setY(alturaMapa - 1);
         }
     }
 

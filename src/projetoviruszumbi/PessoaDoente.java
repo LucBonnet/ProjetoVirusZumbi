@@ -16,6 +16,7 @@ public class PessoaDoente extends Pessoa implements IMovable {
 
     /**
      * Métoo construtor da classe Pessoa
+     *
      * @param x x da posição da Pessoa
      * @param y y da posição da Pessoa
      * @param cor cor da Pessoa
@@ -33,7 +34,7 @@ public class PessoaDoente extends Pessoa implements IMovable {
      * Método mover. Move a pessoa para uma posição aleatória
      */
     @Override
-    public void mover() {
+    public void mover(int alturaMapa, int larguraMapa) {
         // Define uma direção
         int direcao = (int) (Math.random() * 4);
 
@@ -51,8 +52,20 @@ public class PessoaDoente extends Pessoa implements IMovable {
                 setX(getX() + 1);
                 break;
         }
+
+        if (super.getX() > larguraMapa - 1) {
+            super.setX(0);
+        } else if (super.getX() < 0) {
+            super.setX(larguraMapa - 1);
+        }
+
+        if (super.getY() > alturaMapa - 1) {
+            super.setY(0);
+        } else if (super.getY() < 0) {
+            super.setY(alturaMapa - 1);
+        }
     }
-    
+
     public long getDataDeContagio() {
         return this.dataDeContagio;
     }

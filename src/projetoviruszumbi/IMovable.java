@@ -10,5 +10,5 @@ public interface IMovable {
     /**
      * Método mover. Move uma pessoa
      */
-    public void mover();
+    public void mover(int larguraMapa, int alturaMapa);
 }
