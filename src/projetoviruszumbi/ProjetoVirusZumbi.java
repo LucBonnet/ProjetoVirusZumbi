@@ -18,7 +18,7 @@ public class ProjetoVirusZumbi {
             m.atualizaMundo();
             // Desenha o mundo
             m.desenhaMundo();
-
+            
             try {
                 // Pausa de 300ms
                 Thread.sleep(300);

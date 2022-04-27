@@ -12,7 +12,9 @@ import java.util.Date;
  */
 public class Mundo {
 
-    // Mapa do mundo
+    /**
+     * Mapa do mundo
+     */
     public int[][] mapa;
     // Pessoas saudáveis
     private ArrayList<PessoaSaudavel> pessoasSaudaveis = new ArrayList<>();
@@ -25,7 +27,10 @@ public class Mundo {
     // virus
     private Virus virus = new Virus("Vírus zumbi");
 
+    // Vetor com as cores do mundo
     private String cores[] = {ICores.VAZIO, ICores.BORDA, ICores.PESSOA_SAUDAVEL, ICores.PESSOA_DOENTE, ICores.ZUMBI, ICores.HOSPITAL_PAREDES, ICores.HOSPITAL_CRUZ, ICores.RESET};
+
+    private int chanceDeCura;
 
     /**
      * Método construtor da classe Mundo
@@ -36,7 +41,7 @@ public class Mundo {
         reiniciaMapa();
 
         // Cria as pessoas saudáveis iniciais
-        int numInicialPS = 1;
+        int numInicialPS = 100;
         for (int i = 0; i < numInicialPS; i++) {
             int x = (int) (Math.random() * mapa[0].length);
             int y = (int) (Math.random() * mapa.length);
@@ -50,7 +55,7 @@ public class Mundo {
         }
 
         // Cria as pessoas doentes iniciais
-        int numInicialPD = 10;
+        int numInicialPD = 2;
         for (int i = 0; i < numInicialPD; i++) {
             int x = (int) (Math.random() * mapa[0].length);
             int y = (int) (Math.random() * mapa.length);
@@ -93,6 +98,7 @@ public class Mundo {
      * Método para atualizar o mundo
      */
     public void atualizaMundo() {
+        // Reinicia o mundo
         reiniciaMapa();
 
         // Adiciona os hospitais
@@ -120,20 +126,21 @@ public class Mundo {
         for (PessoaSaudavel p : pessoasSaudaveis) {
             int x = p.getX();
             int y = p.getY();
-            this.mapa[y][x] = p.getCor();
 
             p.mover(mapa[0].length, mapa.length);
-            
+
+            this.mapa[y][x] = p.getCor();
         }
 
-        ArrayList<PessoaDoente> curados = new ArrayList<>();
+        ArrayList<PessoaDoente> psCuradas = new ArrayList<>();
         // Move todas as pessoas doentes
         for (PessoaDoente p : pessoasDoentes) {
             int x = p.getX();
             int y = p.getY();
-            this.mapa[y][x] = p.getCor();
 
             p.mover(mapa.length, mapa[0].length);
+
+            this.mapa[y][x] = p.getCor();
 
             for (Hospital h : hospitais) {
                 int xh = h.getX();
@@ -141,8 +148,8 @@ public class Mundo {
                 int lh = h.getLargura();
                 int ah = h.getAltura();
 
-                if (x >= xh && x <= lh + xh && y >= yh && y <= ah + yh) {
-                    curados.add(p);
+                if (x >= xh && x <= lh - 1 + xh && y >= yh && y <= ah - 1 + yh) {
+                    psCuradas.add(p);
                     int corPessoaSaudavel = 0;
                     try {
                         corPessoaSaudavel = indexCor(cores, ICores.PESSOA_SAUDAVEL);
@@ -153,11 +160,13 @@ public class Mundo {
                 }
             }
         }
-        
-        for(PessoaDoente c : curados) {
+
+        // Atualiza as pessoas doentes
+        for (PessoaDoente c : psCuradas) {
             pessoasDoentes.remove(c);
         }
 
+        ArrayList<Zumbi> zCurados = new ArrayList<>();
         // Move todos os zumbis
         for (Zumbi z : zumbis) {
             int x = z.getX();
@@ -165,6 +174,33 @@ public class Mundo {
             this.mapa[y][x] = z.getCor();
 
             z.mover(mapa.length, mapa[0].length);
+
+            for (Hospital h : hospitais) {
+                int xh = h.getX();
+                int yh = h.getY();
+                int lh = h.getLargura();
+                int ah = h.getAltura();
+
+                // Chance do zumbi ser curado detro do hospital
+                Boolean curado = Math.random() * (100 - chanceDeCura) == 0;
+
+                // Caso o zumbi entre no hosptal e a chance dele ser curado ocorrer, ele virará uma pessoa saudável
+                if ((x >= xh && x <= lh - 1 + xh && y >= yh && y <= ah - 1 + yh) && curado) {
+                    zCurados.add(z);
+                    int corPessoaSaudavel = 0;
+                    try {
+                        corPessoaSaudavel = indexCor(cores, ICores.PESSOA_SAUDAVEL);
+                    } catch (Exception e) {
+                        System.err.println(e.getMessage());
+                    }
+                    pessoasSaudaveis.add(new PessoaSaudavel(x, y, corPessoaSaudavel));
+                }
+            }
+        }
+
+        // Atualiza os zumbis
+        for (Zumbi z : zCurados) {
+            zumbis.remove(z);
         }
 
         ArrayList<PessoaSaudavel> contaminados = new ArrayList<>();
@@ -178,49 +214,37 @@ public class Mundo {
                 int xpd = pd.getX();
                 int ypd = pd.getY();
 
-                if (x == xpd && y == ypd) {
-                    // mesma posição
-                    contaminado = true;
-                    break;
-                } else if (x == xpd && y == ypd + 1) {
-                    contaminado = true;
-                    break;
-                } else if (x == xpd && y == ypd - 1) {
-                    contaminado = true;
-                    break;
-                } else if (x == xpd + 1 && y == ypd) {
-                    contaminado = true;
-                    break;
-                } else if (x == xpd - 1 && y == ypd) {
-                    contaminado = true;
+                // Verifica o distanciamento entre as pessoas, caso a distancia 
+                // seja igual a 1 ou igual a 0, contaminado vale true
+                Boolean ladoALado = distanciamento(1, x, y, xpd, ypd);
+                Boolean mesmaPosicao = distanciamento(0, x, y, xpd, ypd);
+                contaminado = ladoALado || mesmaPosicao;
+
+                if (contaminado) {
                     break;
                 }
             }
 
-            for (Zumbi z : zumbis) {
-                int xz = z.getX();
-                int yz = z.getY();
+            if (!contaminado) {
+                for (Zumbi z : zumbis) {
+                    int xz = z.getX();
+                    int yz = z.getY();
 
-                if (x == xz && y == yz) {
-                    // mesma posição
-                    contaminado = true;
-                    break;
-                } else if (x == xz && y == yz + 1) {
-                    contaminado = true;
-                    break;
-                } else if (x == xz && y == yz - 1) {
-                    contaminado = true;
-                    break;
-                } else if (x == xz + 1 && y == yz) {
-                    contaminado = true;
-                    break;
-                } else if (x == xz - 1 && y == yz) {
-                    contaminado = true;
-                    break;
+                    // Verifica o distanciamento entre as pessoas, caso a distancia 
+                    // seja igual a 1 ou igual a 0, contaminado vale true
+                    Boolean ladoALado = distanciamento(1, x, y, xz, yz);
+                    Boolean mesmaPosicao = distanciamento(0, x, y, xz, yz);
+                    contaminado = ladoALado || mesmaPosicao;
+
+                    if (contaminado) {
+                        break;
+                    }
                 }
             }
-
-            if (contaminado) {
+            
+            // Se a cura chegar a 100% nenhuma pessoa será contaminada
+            if (contaminado && chanceDeCura != 100) {
+                // Transforma a pessoa saudável em pessoa doente
                 int corPessoaDoente = 0;
                 try {
                     corPessoaDoente = indexCor(cores, ICores.PESSOA_DOENTE);
@@ -232,15 +256,18 @@ public class Mundo {
             }
         }
 
+        // Atualiza as pessoas saudáveis
         for (PessoaSaudavel c : contaminados) {
             pessoasSaudaveis.remove(c);
         }
 
+        // Retorna o tempo atual em ms
         Calendar calendar = Calendar.getInstance();
         Date data = calendar.getTime();
         long dataAtual = data.getTime();
 
         ArrayList<PessoaDoente> novosZumbis = new ArrayList<>();
+        // Verifica o tempo de contaminação de cada pessoa doente
         for (PessoaDoente pd : pessoasDoentes) {
             long tempo = dataAtual - pd.getDataDeContagio();
             int corZumbi = 0;
@@ -249,15 +276,25 @@ public class Mundo {
             } catch (Exception e) {
                 System.err.println(e.getMessage());
             }
+            // Verifica se o tempo de contagio da pessoa doente é maior ou igual a 15000ms
             if (tempo >= 15000) {
                 zumbis.add(new Zumbi(pd.getX(), pd.getY(), corZumbi, virus));
                 novosZumbis.add(pd);
             }
         }
 
+        // Atualiza as pessoas doentes
         for (PessoaDoente nz : novosZumbis) {
             pessoasDoentes.remove(nz);
         }
+
+        // Solução: quanto maior o número de zumbis, melhor desenvolvida será a cura
+        // Atualiza a chance de cura
+        int numPessoas = pessoasDoentes.size() + pessoasSaudaveis.size() + zumbis.size();
+        double razao = (float) zumbis.size() / numPessoas;
+        int novaChance = (int) (razao * 100);
+        // Garante que a cura só irá aumentar
+        this.chanceDeCura = chanceDeCura > novaChance ? chanceDeCura : novaChance;
     }
 
     /**
@@ -272,8 +309,8 @@ public class Mundo {
         System.out.print(ICores.PESSOA_DOENTE + " " + ICores.RESET + " Doentes: " + pessoasDoentes.size());
         System.out.print("   ");
         // Número de zumbis
-        System.out.print(ICores.ZUMBI + " " + ICores.RESET + " Zumbis: " + zumbis.size());
-        System.out.print("\n\n");
+        System.out.print(ICores.ZUMBI + " " + ICores.RESET + " Zumbis: " + zumbis.size() + "\n");
+        System.out.println("Cura: " + chanceDeCura + "%");
 
         for (int i = 0; i < this.mapa.length; i++) {
             for (int j = 0; j < this.mapa[0].length; j++) {
@@ -282,15 +319,6 @@ public class Mundo {
             System.out.print("\n");
         }
         System.out.println("");
-    }
-
-    public void desenhaMundoII() {
-        for (int i = 0; i < this.mapa.length; i++) {
-            for (int j = 0; j < this.mapa[0].length; j++) {
-                System.out.print(mapa[i][j] + " ");
-            }
-            System.out.print("\n");
-        }
     }
 
     private void reiniciaMapa() {
@@ -313,6 +341,7 @@ public class Mundo {
         }
     }
 
+    // Retorna o index da cor procurada
     private int indexCor(String vetor[], String cor) throws Exception {
         for (int i = 0; i < vetor.length; i++) {
             if (vetor[i].equals(cor)) {
@@ -321,4 +350,48 @@ public class Mundo {
         }
         throw new Exception("Cor não encontrada");
     }
+
+    /**
+     * Método distanciamento. Retorna true se ocorrer o distanciamento exato e
+     * false caso o contrário
+     *
+     * @param distancia distancia a ser verificada
+     * @param xa x da primeira pessoa
+     * @param ya y da primeira pessoa
+     * @param xb x da segunda pessoa
+     * @param yb y da segunda pessoa
+     * @return se existe o distanciamento desejado entre as duas pessoas
+     */
+    private Boolean distanciamento(int distancia, int xa, int ya, int xb, int yb) {
+        // Distancia: 1
+        // Posições: 
+        //  | |    
+        //  |█|  
+        //  |█| 
+        if (xa == xb && ya == yb + distancia) {
+            return true;
+        } // Posições: 
+        //  |█|  
+        //  |█| 
+        //  | |
+        else if (xa == xb && ya == yb - distancia) {
+            return true;
+        } // Posições: 
+        //  | |
+        //  |█|█ 
+        //  | |
+        else if (xa == xb + distancia && ya == yb) {
+            return true;
+        } // Posições: 
+        //  | |
+        // █|█| 
+        //  | |
+        else if (xa == xb - distancia && ya == yb) {
+            return true;
+        }
+
+        // distancias diferentes da desejada
+        return false;
+    }
+
 }

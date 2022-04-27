@@ -38,6 +38,7 @@ public class PessoaDoente extends Pessoa implements IMovable {
         // Define uma direção
         int direcao = (int) (Math.random() * 4);
 
+        // Move na direção
         switch (direcao) {
             case 0:
                 setY(getY() - 1);
@@ -53,12 +54,14 @@ public class PessoaDoente extends Pessoa implements IMovable {
                 break;
         }
 
+        // Verifica se a pessoa está nas bordas do mundo no eixo x
         if (super.getX() > larguraMapa - 1) {
             super.setX(0);
         } else if (super.getX() < 0) {
             super.setX(larguraMapa - 1);
         }
 
+        // Verifica se a pessoa está nas bordas do mundo no eixo y
         if (super.getY() > alturaMapa - 1) {
             super.setY(0);
         } else if (super.getY() < 0) {
@@ -66,6 +69,11 @@ public class PessoaDoente extends Pessoa implements IMovable {
         }
     }
 
+    /**
+     * Método getDataDeContagio. Retorna a data de contágio da pessoa doente
+     *
+     * @return data de contagio
+     */
     public long getDataDeContagio() {
         return this.dataDeContagio;
     }

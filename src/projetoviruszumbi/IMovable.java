@@ -9,6 +9,9 @@ public interface IMovable {
 
     /**
      * Método mover. Move uma pessoa
+     * 
+     * @param larguraMapa largura do mapa
+     * @param alturaMapa altura do mapa
      */
     public void mover(int larguraMapa, int alturaMapa);
 }
